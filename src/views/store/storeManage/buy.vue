@@ -5,19 +5,20 @@
       <div v-if="crud.props.searchToggle">
         <!-- 搜索 -->
         <label class="el-form-item-label">仓库</label>
-        <el-input v-model="query.storeId" clearable placeholder="仓库ID，由字典实现" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <el-select v-model="query.storeId" filterable placeholder="请选择">
+          <el-option
+            v-for="item in dict.store_id"
+            :key="item.id"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
         <label class="el-form-item-label">货物编号</label>
-        <el-input v-model="query.goodsId" clearable placeholder="货物ID" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <el-input v-model="query.goodsCode" clearable placeholder="货物ID" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
         <label class="el-form-item-label">货物名称</label>
-        <el-input v-model="query.goodsId" clearable placeholder="货物ID" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <el-input v-model="query.name" clearable placeholder="货物ID" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
         <label class="el-form-item-label">供应商</label>
-        <el-input v-model="query.goodsId" clearable placeholder="货物ID" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
-        <!--<date-range-picker
-          v-model="query.updateTime"
-          start-placeholder="updateTimeStart"
-          end-placeholder="updateTimeStart"
-          class="date-item"
-        />-->
+        <el-input v-model="query.supplyname" clearable placeholder="货物ID" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
         <rrOperation :crud="crud" />
       </div>
       <!--如果想在工具栏加入更多按钮，可以使用插槽方式， slot = 'left' or 'right'-->
@@ -35,20 +36,27 @@
               />
             </el-select>
           </el-form-item>
-          <el-form-item label="货物编号" prop="goodsId">
-            <el-input v-model="form.goodsId" style="width: 370px;" />
+          <el-form-item label="货物编号" prop="goods.goodsCode">
+            <el-input v-model="form.goods.goodsCode" style="width: 370px;" />
           </el-form-item>
-          <el-form-item label="货物名称" prop="goodsId">
-            <el-input v-model="form.goodsId" style="width: 370px;" />
+          <el-form-item label="货物名称" prop="goods.name">
+            <el-input v-model="form.goods.name" style="width: 370px;" />
           </el-form-item>
-          <el-form-item label="货物单位" prop="goodsId">
-            <el-input v-model="form.goodsId" style="width: 370px;" />
+          <el-form-item label="货物单位" prop="goods.unit">
+            <el-select v-model="form.goods.unit" filterable placeholder="请选择">
+              <el-option
+                v-for="item in dict.goods_unit"
+                :key="item.id"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
           </el-form-item>
-          <el-form-item label="货物单价" prop="goodsId">
-            <el-input v-model="form.goodsId" style="width: 370px;" />
+          <el-form-item label="货物单价" prop="goods.price">
+            <el-input v-model="form.goods.price" style="width: 370px;" />
           </el-form-item>
-          <el-form-item label="供应商" prop="goodsId">
-            <el-input v-model="form.goodsId" style="width: 370px;" />
+          <el-form-item label="供应商" prop="goods.supply.name">
+            <el-input v-model="form.goods.supply.name" style="width: 370px;" />
           </el-form-item>
           <el-form-item label="新增数量" prop="counts">
             <el-input v-model="form.counts" style="width: 370px;" />
@@ -67,9 +75,14 @@
             {{ dict.label.store_id[scope.row.storeId] }}
           </template>
         </el-table-column>
-        <el-table-column prop="goodsId" label="货物编号" />
-        <el-table-column prop="goodsId" label="货物名称" />
-        <el-table-column prop="goodsId" label="供应商" />
+        <el-table-column prop="goods.goodsCode" label="货物编号" />
+        <el-table-column prop="goods.name" label="货物名称" />
+        <el-table-column prop="goods.unit" label="货物单位">
+          <template slot-scope="scope">
+            {{ dict.label.goods_unit[scope.row.goods.unit] }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="goods.supply.name" label="供应商" />
         <el-table-column prop="counts" label="库存数量" />
         <el-table-column prop="amount" label="库存金额" />
         <el-table-column prop="updateTime" label="更新时间" />
@@ -89,21 +102,21 @@
 </template>
 
 <script>
-import crudStoreRemain from '@/api/store/storeRemain'
+import crudStoreRemain from '@/api/store/storeBuy'
 import CRUD, { presenter, header, form, crud } from '@crud/crud'
 import rrOperation from '@crud/RR.operation'
 import crudOperation from '@crud/CRUD.operation'
 import udOperation from '@crud/UD.operation'
 import pagination from '@crud/Pagination'
 
-const defaultForm = { remainId: null, storeId: null, goodsId: null, counts: null, amount: null, createBy: null, updateBy: null, createTime: null, updateTime: null }
+const defaultForm = { remainId: null, storeId: null, goodsId: null, goods: { goodsId: null, goodsCode: null, name: null, unit: null, price: null, supply: { name: null }}, counts: null, amount: null, createBy: null, updateBy: null, createTime: null, updateTime: null }
 export default {
-  name: 'StoreRemain',
+  name: 'StoreBuy',
   components: { pagination, crudOperation, rrOperation, udOperation },
   mixins: [presenter(), header(), form(defaultForm), crud()],
-  dicts: ['store_id'],
+  dicts: ['store_id', 'goods_unit'],
   cruds() {
-    return CRUD({ title: '库存', url: 'api/storeRemain', idField: 'remainId', sort: 'remainId,desc', crudMethod: { ...crudStoreRemain }})
+    return CRUD({ title: '库存', url: 'api/storeBuy', idField: 'remainId', sort: 'remainId,desc', crudMethod: { ...crudStoreRemain }})
   },
   data() {
     return {
