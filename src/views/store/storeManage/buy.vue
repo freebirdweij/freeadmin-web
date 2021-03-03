@@ -16,9 +16,9 @@
         <label class="el-form-item-label">货物编号</label>
         <el-input v-model="query.goodsCode" clearable placeholder="货物ID" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
         <label class="el-form-item-label">货物名称</label>
-        <el-input v-model="query.name" clearable placeholder="货物ID" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <el-input v-model="query.goodsName" clearable placeholder="货物ID" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
         <label class="el-form-item-label">供应商</label>
-        <el-input v-model="query.supplyname" clearable placeholder="货物ID" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <el-input v-model="query.supplyName" clearable placeholder="货物ID" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
         <rrOperation :crud="crud" />
       </div>
       <!--如果想在工具栏加入更多按钮，可以使用插槽方式， slot = 'left' or 'right'-->
