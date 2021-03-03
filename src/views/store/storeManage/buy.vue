@@ -88,6 +88,26 @@
         <el-table-column prop="updateTime" label="更新时间" />
         <el-table-column v-if="checkPer(['admin','storeRemain:edit','storeRemain:del'])" label="操作" width="150px" align="center">
           <template slot-scope="scope">
+            <el-button
+              v-permission="['admin','store:input']"
+              :disabled="!showButton"
+              :loading="menuLoading"
+              icon="el-icon-check"
+              size="mini"
+              style="float: right; padding: 6px 9px"
+              type="primary"
+              @click="inputGoods"
+            >进货</el-button>
+            <el-button
+              v-permission="['admin','store:output']"
+              :disabled="!showButton"
+              :loading="menuLoading"
+              icon="el-icon-check"
+              size="mini"
+              style="float: right; padding: 6px 9px"
+              type="primary"
+              @click="outputGoods"
+            >退货</el-button>
             <udOperation
               :data="scope.row"
               :permission="permission"
