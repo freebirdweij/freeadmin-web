@@ -27,7 +27,7 @@
       <el-dialog :close-on-click-modal="false" :before-close="crud.cancelCU" :visible.sync="crud.status.cu > 0" :title="crud.status.title" width="500px">
         <el-form ref="form" :model="form" :rules="rules" size="small" label-width="80px">
           <el-form-item label="仓库" prop="storeId">
-            <el-select v-model="form.storeId" filterable placeholder="请选择">
+            <el-select v-model="form.storeId" filterable placeholder="请选择" :disabled="form.id">
               <el-option
                 v-for="item in dict.store_id"
                 :key="item.id"
@@ -37,13 +37,13 @@
             </el-select>
           </el-form-item>
           <el-form-item label="货物编号" prop="goods.goodsCode">
-            <el-input v-model="form.goods.goodsCode" style="width: 370px;" />
+            <el-input v-model="form.goods.goodsCode" style="width: 370px;" :disabled="form.id" />
           </el-form-item>
           <el-form-item label="货物名称" prop="goods.name">
-            <el-input v-model="form.goods.name" style="width: 370px;" />
+            <el-input v-model="form.goods.name" style="width: 370px;" :disabled="form.id" />
           </el-form-item>
           <el-form-item label="货物单位" prop="goods.unit">
-            <el-select v-model="form.goods.unit" filterable placeholder="请选择">
+            <el-select v-model="form.goods.unit" filterable placeholder="请选择" :disabled="form.id">
               <el-option
                 v-for="item in dict.goods_unit"
                 :key="item.id"
@@ -53,18 +53,22 @@
             </el-select>
           </el-form-item>
           <el-form-item label="货物单价" prop="goods.price">
-            <el-input v-model="form.goods.price" style="width: 370px;" />
+            <el-input v-model="form.goods.price" style="width: 370px;" :disabled="form.id" />
           </el-form-item>
           <el-form-item label="供应商" prop="goods.supply.name">
-            <el-input v-model="form.goods.supply.name" style="width: 370px;" />
+            <el-input v-model="form.goods.supply.name" style="width: 370px;" :disabled="form.id" />
           </el-form-item>
-          <el-form-item label="新增数量" prop="counts">
+          <el-form-item ref="counts" label="新增数量" prop="counts">
             <el-input v-model="form.counts" style="width: 370px;" />
           </el-form-item>
         </el-form>
-        <div slot="footer" class="dialog-footer">
+        <div v-if="inGoods" slot="footer" class="dialog-footer">
           <el-button type="text" @click="crud.cancelCU">取消</el-button>
-          <el-button :loading="crud.status.cu === 2" type="primary" @click="crud.submitCU">确认</el-button>
+          <el-button :loading="crud.status.cu === 2" type="primary" @click="doIngoods(data)">确认</el-button>
+        </div>
+        <div v-else slot="footer" class="dialog-footer">
+          <el-button type="text" @click="crud.cancelCU">取消</el-button>
+          <el-button :loading="crud.status.cu === 2" type="primary" @click="doOutgoods(data)">确认</el-button>
         </div>
       </el-dialog>
       <!--表格渲染-->
@@ -96,7 +100,7 @@
               size="mini"
               style="float: right; padding: 6px 9px"
               type="primary"
-              @click="inputGoods"
+              @click="inputGoods(scope.row)"
             >进货</el-button>
             <el-button
               v-permission="['admin','store:output']"
@@ -106,7 +110,7 @@
               size="mini"
               style="float: right; padding: 6px 9px"
               type="primary"
-              @click="outputGoods"
+              @click="outputGoods(scope.row)"
             >退货</el-button>
             <udOperation
               :data="scope.row"
@@ -128,6 +132,7 @@ import rrOperation from '@crud/RR.operation'
 import crudOperation from '@crud/CRUD.operation'
 import udOperation from '@crud/UD.operation'
 import pagination from '@crud/Pagination'
+import Vue from 'vue'
 
 const defaultForm = { remainId: null, storeId: null, goodsId: null, goods: { goodsId: null, goodsCode: null, name: null, unit: null, price: null, supply: { name: null }}, counts: null, amount: null, createBy: null, updateBy: null, createTime: null, updateTime: null }
 export default {
@@ -159,6 +164,7 @@ export default {
           { required: true, message: '库存金额不能为空', trigger: 'blur' }
         ]
       },
+      inGoods: true, menuLoading: false, showButton: false,
       queryTypeOptions: [
         { key: 'remainId', display_name: 'ID' },
         { key: 'storeId', display_name: '仓库ID，由字典实现' },
@@ -171,6 +177,48 @@ export default {
     // 钩子：在获取表格数据之前执行，false 则代表不获取数据
     [CRUD.HOOK.beforeRefresh]() {
       return true
+    },
+    doIngoods(data) {
+      crudStoreRemain.inGoods(data)
+    },
+    doOutgoods(data) {
+      crudStoreRemain.outGoods(data)
+    },
+    // 进货
+    inputGoods(data) {
+      this.toEditGoods(data)
+      this.$refs.counts.lable = '进货数量'
+    },
+    // 退货
+    outputGoods(data) {
+      this.toEditGoods(data)
+      this.$refs.counts.lable = '退货数量'
+    },
+    /**
+     * 启动编辑
+     * @param {*} data 数据项
+     */
+    toEditGoods(data) {
+      this.resetForm(JSON.parse(JSON.stringify(data)))
+    },
+    /**
+     * 重置表单
+     * @param {Array} data 数据
+     */
+    resetForm(data) {
+      const form = data || (typeof crud.defaultForm === 'object' ? JSON.parse(JSON.stringify(crud.defaultForm)) : crud.defaultForm.apply(crud.findVM('form')))
+      const crudFrom = crud.form
+      for (const key in form) {
+        if (crudFrom.hasOwnProperty(key)) {
+          crudFrom[key] = form[key]
+        } else {
+          Vue.set(crudFrom, key, form[key])
+        }
+      }
+      // add by ghl 2020-10-04  页面重复添加信息时，下拉框的校验会存在，需要找工取消
+      if (crud.findVM('form').$refs['form']) {
+        crud.findVM('form').$refs['form'].clearValidate()
+      }
     }
   }
 }

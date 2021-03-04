@@ -24,4 +24,20 @@ export function edit(data) {
   })
 }
 
-export default { add, edit, del }
+export function inGoods(data) {
+  return request({
+    url: 'api/storeBuy/ingood',
+    method: 'put',
+    data
+  })
+}
+
+export function outGoods(data) {
+  return request({
+    url: 'api/storeBuy/outgood',
+    method: 'put',
+    data
+  })
+}
+
+export default { add, edit, del, inGoods, outGoods }
