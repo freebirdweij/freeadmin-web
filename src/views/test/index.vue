@@ -179,12 +179,12 @@ export default {
   created() {
     this.crud.msg.add = '新增成功，默认密码：123456'
   },
-  mounted: function() {
+  /* mounted: function() {
     const that = this
     window.onresize = function temp() {
       that.height = document.documentElement.clientHeight - 180 + 'px;'
     }
-  },
+  }, */
   methods: {
     // 新增与编辑前做的操作
     [CRUD.HOOK.afterToCU](crud, form) {
