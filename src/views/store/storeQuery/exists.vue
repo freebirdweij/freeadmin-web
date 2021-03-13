@@ -5,19 +5,17 @@
       <div v-if="crud.props.searchToggle">
         <!-- 搜索 -->
         <label class="el-form-item-label">ID</label>
-        <el-input v-model="query.operateId" clearable placeholder="ID" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
-        <label class="el-form-item-label">库存ID</label>
-        <el-input v-model="query.remainId" clearable placeholder="库存ID" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
-        <label class="el-form-item-label">与本次操作相关人员</label>
-        <el-input v-model="query.userId" clearable placeholder="与本次操作相关人员" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
-        <label class="el-form-item-label">操作类型，由字典实现</label>
-        <el-input v-model="query.operateType" clearable placeholder="操作类型，由字典实现" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
-        <label class="el-form-item-label">操作数量</label>
-        <el-input v-model="query.counts" clearable placeholder="操作数量" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <el-input v-model="query.remainId" clearable placeholder="ID" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <label class="el-form-item-label">仓库ID，由字典实现</label>
+        <el-input v-model="query.storeId" clearable placeholder="仓库ID，由字典实现" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <label class="el-form-item-label">货物ID</label>
+        <el-input v-model="query.goodsId" clearable placeholder="货物ID" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <label class="el-form-item-label">更新者</label>
+        <el-input v-model="query.updateBy" clearable placeholder="更新者" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
         <date-range-picker
-          v-model="query.amount"
-          start-placeholder="amountStart"
-          end-placeholder="amountStart"
+          v-model="query.updateTime"
+          start-placeholder="updateTimeStart"
+          end-placeholder="updateTimeStart"
           class="date-item"
         />
         <rrOperation :crud="crud" />
@@ -28,35 +26,38 @@
       <el-dialog :close-on-click-modal="false" :before-close="crud.cancelCU" :visible.sync="crud.status.cu > 0" :title="crud.status.title" width="500px">
         <el-form ref="form" :model="form" :rules="rules" size="small" label-width="80px">
           <el-form-item label="ID">
-            <el-input v-model="form.operateId" style="width: 370px;" />
-          </el-form-item>
-          <el-form-item label="库存ID" prop="remainId">
             <el-input v-model="form.remainId" style="width: 370px;" />
           </el-form-item>
-          <el-form-item label="与本次操作相关人员" prop="userId">
-            <el-input v-model="form.userId" style="width: 370px;" />
-          </el-form-item>
-          <el-form-item label="操作类型，由字典实现" prop="operateType">
-            <el-select v-model="form.operateType" filterable placeholder="请选择">
+          <el-form-item label="仓库ID，由字典实现" prop="storeId">
+            <el-select v-model="form.storeId" filterable placeholder="请选择">
               <el-option
-                v-for="item in dict.operate_type"
+                v-for="item in dict.store_id"
                 :key="item.id"
                 :label="item.label"
                 :value="item.value"
               />
             </el-select>
           </el-form-item>
-          <el-form-item label="操作数量" prop="counts">
+          <el-form-item label="货物ID" prop="goodsId">
+            <el-input v-model="form.goodsId" style="width: 370px;" />
+          </el-form-item>
+          <el-form-item label="库存数量" prop="counts">
             <el-input v-model="form.counts" style="width: 370px;" />
           </el-form-item>
-          <el-form-item label="操作金额" prop="amount">
+          <el-form-item label="库存金额" prop="amount">
             <el-input v-model="form.amount" style="width: 370px;" />
           </el-form-item>
           <el-form-item label="创建者">
             <el-input v-model="form.createBy" style="width: 370px;" />
           </el-form-item>
+          <el-form-item label="更新者">
+            <el-input v-model="form.updateBy" style="width: 370px;" />
+          </el-form-item>
           <el-form-item label="创建日期">
             <el-input v-model="form.createTime" style="width: 370px;" />
+          </el-form-item>
+          <el-form-item label="更新时间">
+            <el-input v-model="form.updateTime" style="width: 370px;" />
           </el-form-item>
         </el-form>
         <div slot="footer" class="dialog-footer">
@@ -67,16 +68,18 @@
       <!--表格渲染-->
       <el-table ref="table" v-loading="crud.loading" :data="crud.data" size="small" style="width: 100%;" @selection-change="crud.selectionChangeHandler">
         <el-table-column type="selection" width="55" />
-        <el-table-column prop="remainId" label="库存ID" />
-        <el-table-column prop="userId" label="与本次操作相关人员" />
-        <el-table-column prop="operateType" label="操作类型，由字典实现">
+        <el-table-column prop="remainId" label="ID" />
+        <el-table-column prop="storeId" label="仓库ID，由字典实现">
           <template slot-scope="scope">
-            {{ dict.label.operate_type[scope.row.operateType] }}
+            {{ dict.label.store_id[scope.row.storeId] }}
           </template>
         </el-table-column>
-        <el-table-column prop="counts" label="操作数量" />
-        <el-table-column prop="amount" label="操作金额" />
-        <el-table-column v-if="checkPer(['admin','storeOperate:edit','storeOperate:del'])" label="操作" width="150px" align="center">
+        <el-table-column prop="goodsId" label="货物ID" />
+        <el-table-column prop="counts" label="库存数量" />
+        <el-table-column prop="amount" label="库存金额" />
+        <el-table-column prop="updateBy" label="更新者" />
+        <el-table-column prop="updateTime" label="更新时间" />
+        <el-table-column v-if="checkPer(['admin','storeRemain:edit','storeRemain:del'])" label="操作" width="150px" align="center">
           <template slot-scope="scope">
             <udOperation
               :data="scope.row"
@@ -92,52 +95,48 @@
 </template>
 
 <script>
-import crudStoreOperate from '@/api/store/storeOperate'
+import crudStoreRemain from '@/api/store/storeRemain'
 import CRUD, { presenter, header, form, crud } from '@crud/crud'
 import rrOperation from '@crud/RR.operation'
 import crudOperation from '@crud/CRUD.operation'
 import udOperation from '@crud/UD.operation'
 import pagination from '@crud/Pagination'
 
-const defaultForm = { operateId: null, remainId: null, userId: null, operateType: null, counts: null, amount: null, createBy: null, updateBy: null, createTime: null, updateTime: null }
+const defaultForm = { remainId: null, storeId: null, goodsId: null, counts: null, amount: null, createBy: null, updateBy: null, createTime: null, updateTime: null }
 export default {
-  name: 'StoreOperate',
+  name: 'StoreRemain',
   components: { pagination, crudOperation, rrOperation, udOperation },
   mixins: [presenter(), header(), form(defaultForm), crud()],
-  dicts: ['operate_type'],
+  dicts: ['store_id'],
   cruds() {
-    return CRUD({ title: '仓库操作', url: 'api/storeOperate', idField: 'operateId', sort: 'operateId,desc', crudMethod: { ...crudStoreOperate }})
+    return CRUD({ title: '库存', url: 'api/storeRemain', idField: 'remainId', sort: 'remainId,desc', crudMethod: { ...crudStoreRemain }})
   },
   data() {
     return {
       permission: {
-        add: ['admin', 'storeOperate:add'],
-        edit: ['admin', 'storeOperate:edit'],
-        del: ['admin', 'storeOperate:del']
+        add: ['admin', 'storeRemain:add'],
+        edit: ['admin', 'storeRemain:edit'],
+        del: ['admin', 'storeRemain:del']
       },
       rules: {
-        remainId: [
-          { required: true, message: '库存ID不能为空', trigger: 'blur' }
+        storeId: [
+          { required: true, message: '仓库ID，由字典实现不能为空', trigger: 'blur' }
         ],
-        userId: [
-          { required: true, message: '与本次操作相关人员不能为空', trigger: 'blur' }
-        ],
-        operateType: [
-          { required: true, message: '操作类型，由字典实现不能为空', trigger: 'blur' }
+        goodsId: [
+          { required: true, message: '货物ID不能为空', trigger: 'blur' }
         ],
         counts: [
-          { required: true, message: '操作数量不能为空', trigger: 'blur' }
+          { required: true, message: '库存数量不能为空', trigger: 'blur' }
         ],
         amount: [
-          { required: true, message: '操作金额不能为空', trigger: 'blur' }
+          { required: true, message: '库存金额不能为空', trigger: 'blur' }
         ]
       },
       queryTypeOptions: [
-        { key: 'operateId', display_name: 'ID' },
-        { key: 'remainId', display_name: '库存ID' },
-        { key: 'userId', display_name: '与本次操作相关人员' },
-        { key: 'operateType', display_name: '操作类型，由字典实现' },
-        { key: 'counts', display_name: '操作数量' }
+        { key: 'remainId', display_name: 'ID' },
+        { key: 'storeId', display_name: '仓库ID，由字典实现' },
+        { key: 'goodsId', display_name: '货物ID' },
+        { key: 'updateBy', display_name: '更新者' }
       ]
     }
   },
