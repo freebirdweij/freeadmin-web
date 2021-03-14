@@ -4,22 +4,22 @@
     <div class="head-container">
       <div v-if="crud.props.searchToggle">
         <!-- 搜索 -->
-        <label class="el-form-item-label">ID</label>
-        <el-input v-model="query.operateId" clearable placeholder="ID" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
-        <label class="el-form-item-label">库存ID</label>
-        <el-input v-model="query.remainId" clearable placeholder="库存ID" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
-        <label class="el-form-item-label">与本次操作相关人员</label>
-        <el-input v-model="query.userId" clearable placeholder="与本次操作相关人员" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
-        <label class="el-form-item-label">操作类型，由字典实现</label>
-        <el-input v-model="query.operateType" clearable placeholder="操作类型，由字典实现" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
-        <label class="el-form-item-label">操作数量</label>
-        <el-input v-model="query.counts" clearable placeholder="操作数量" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
-        <date-range-picker
-          v-model="query.amount"
-          start-placeholder="amountStart"
-          end-placeholder="amountStart"
-          class="date-item"
-        />
+        <label class="el-form-item-label">仓库</label>
+        <el-select v-model="query.storeId" filterable placeholder="请选择">
+          <el-option
+            v-for="item in dict.store_id"
+            :key="item.id"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+        <label class="el-form-item-label">货物编号</label>
+        <el-input v-model="query.goodsCode" clearable placeholder="货物ID" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <label class="el-form-item-label">货物名称</label>
+        <el-input v-model="query.goodsName" clearable placeholder="货物名称" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <label class="el-form-item-label">供应商</label>
+        <el-input v-model="query.supplyName" clearable placeholder="供应商" style="width: 185px;" class="filter-item" @keyup.enter.native="crud.toQuery" />
+        <date-range-picker v-model="query.createTime" class="date-item" />
         <rrOperation :crud="crud" />
       </div>
       <!--如果想在工具栏加入更多按钮，可以使用插槽方式， slot = 'left' or 'right'-->
@@ -67,23 +67,21 @@
       <!--表格渲染-->
       <el-table ref="table" v-loading="crud.loading" :data="crud.data" size="small" style="width: 100%;" @selection-change="crud.selectionChangeHandler">
         <el-table-column type="selection" width="55" />
-        <el-table-column prop="remainId" label="库存ID" />
-        <el-table-column prop="userId" label="与本次操作相关人员" />
-        <el-table-column prop="operateType" label="操作类型，由字典实现">
+        <el-table-column prop="storeId" label="仓库">
           <template slot-scope="scope">
-            {{ dict.label.operate_type[scope.row.operateType] }}
+            {{ dict.label.store_id[scope.row.storeId] }}
           </template>
         </el-table-column>
-        <el-table-column prop="counts" label="操作数量" />
-        <el-table-column prop="amount" label="操作金额" />
-        <el-table-column v-if="checkPer(['admin','storeOperate:edit','storeOperate:del'])" label="操作" width="150px" align="center">
+        <el-table-column prop="goods.goodsCode" label="货物编号" />
+        <el-table-column prop="goods.name" label="货物名称" />
+        <el-table-column prop="goods.unit" label="货物单位">
           <template slot-scope="scope">
-            <udOperation
-              :data="scope.row"
-              :permission="permission"
-            />
+            {{ dict.label.goods_unit[scope.row.goods.unit] }}
           </template>
         </el-table-column>
+        <el-table-column prop="goods.supply.name" label="供应商" />
+        <el-table-column prop="counts" label="销售数量" />
+        <el-table-column prop="amount" label="销售金额" />
       </el-table>
       <!--分页组件-->
       <pagination />
@@ -98,13 +96,14 @@ import rrOperation from '@crud/RR.operation'
 import crudOperation from '@crud/CRUD.operation'
 import udOperation from '@crud/UD.operation'
 import pagination from '@crud/Pagination'
+import DateRangePicker from '@/components/DateRangePicker'
 
 const defaultForm = { operateId: null, remainId: null, userId: null, operateType: null, counts: null, amount: null, createBy: null, updateBy: null, createTime: null, updateTime: null }
 export default {
   name: 'StoreOperate',
-  components: { pagination, crudOperation, rrOperation, udOperation },
+  components: { pagination, crudOperation, rrOperation, udOperation, DateRangePicker },
   mixins: [presenter(), header(), form(defaultForm), crud()],
-  dicts: ['operate_type'],
+  dicts: ['store_id', 'operate_type'],
   cruds() {
     return CRUD({ title: '仓库操作', url: 'api/storeOperate', idField: 'operateId', sort: 'operateId,desc', crudMethod: { ...crudStoreOperate }})
   },
@@ -139,6 +138,14 @@ export default {
         { key: 'operateType', display_name: '操作类型，由字典实现' },
         { key: 'counts', display_name: '操作数量' }
       ]
+    }
+  },
+  created() {
+    this.crud.optShow = {
+      add: false,
+      edit: false,
+      del: false,
+      download: true
     }
   },
   methods: {
